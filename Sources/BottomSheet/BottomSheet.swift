@@ -1,3 +1,6 @@
-struct BottomSheet {
-    var text = "Hello, World!"
+
+import UIKit
+
+public class BottomSheet: UIViewController {
+    
 }

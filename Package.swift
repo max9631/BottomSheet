@@ -24,5 +24,8 @@ let package = Package(
         .target(
             name: "BottomSheet",
             dependencies: []),
+//        .testTarget(
+//            name: "BottomSheetTests",
+//            dependencies: ["BottomSheet"]),
     ]
 )
