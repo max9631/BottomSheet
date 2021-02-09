@@ -7,11 +7,13 @@
 
 import UIKit
 
-protocol BottomSheetDelegate: class {
+protocol BottomSheetPositionDelegate: class {
     var corrdinateSystem: UIView { get }
     var sheetOffset: CGFloat { get }
     
-    func setOffset(offset: CGFloat)
+    func setConstant(constant: CGFloat)
+    func nearestOffset(for projection: CGFloat) -> BottomSheetOffset
+    func setOffset(offset: BottomSheetOffset, animated: Bool, velocity: CGFloat, completion: ((Bool) -> Void)?)
 }
 
 struct GestureProperties {
@@ -20,12 +22,12 @@ struct GestureProperties {
 
 class BottomSheet: UIView {
 //    weak var overlayView: UIView?
-    weak var delegate: BottomSheetDelegate?
+    weak var delegate: BottomSheetPositionDelegate?
     
     // gesture properties
     var gesture: GestureProperties = GestureProperties()
     
-    init(overlayViewController: UIViewController, delegate: BottomSheetDelegate) {
+    init(overlayViewController: UIViewController, delegate: BottomSheetPositionDelegate) {
         self.delegate = delegate
         super.init(frame: .zero)
         backgroundColor = .white
@@ -55,9 +57,16 @@ class BottomSheet: UIView {
         case .began:
             gesture.initialOffset = delegate.sheetOffset
         case .ended:
+            let velocity = -recognizer.velocity(in: delegate.corrdinateSystem).y // [points/second] - up, + down
+            let decelerationRate = UIScrollView.DecelerationRate.fast.rawValue
+            let projectedDistance = (velocity / 1000) * decelerationRate / (1.0 - decelerationRate)
+            let projection = gesture.initialOffset + dy + projectedDistance
+            let nearestOffset = delegate.nearestOffset(for: projection)
+            delegate.setOffset(offset: nearestOffset, animated: true, velocity: velocity, completion: nil)
+//            delegate.setOffset(offset: nearestOffset)
             break
         case .changed:
-            delegate.setOffset(offset: gesture.initialOffset + dy)
+            delegate.setConstant(constant: gesture.initialOffset + dy)
         default:
             break
         }

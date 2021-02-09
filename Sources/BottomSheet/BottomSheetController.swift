@@ -53,6 +53,17 @@ public class BottomSheetController: UIViewController {
     private var gestureInitialSheetOffset: CGFloat = .zero
     private var isRegularSizeClass: Bool { traitCollection.horizontalSizeClass == .regular }
     
+    // Computed properties
+    private var delegate: BottomSheetDelegateBase? {
+        [(overlayViewController as? UINavigationController)?.presentingViewController, overlayViewController]
+            .compactMap { $0 as? BottomSheetDelegateBase }
+            .first
+    }
+    
+    private var offsets: [BottomSheetOffset] {
+        delegate?.offsets ?? BottomSheetDefaultLevel.allCases.map(\.offset)
+    }
+    
     init(masterViewController: UIViewController, overlayViewController: UIViewController) {
         super.init(nibName: nil, bundle: nil)
         self.masterViewController = masterViewController
@@ -114,11 +125,50 @@ private extension BottomSheetController {
     }
 }
 
-extension BottomSheetController: BottomSheetDelegate {
+extension BottomSheetController: BottomSheetPositionDelegate {
     var corrdinateSystem: UIView { view }
     var sheetOffset: CGFloat { bottomSheetOffset.constant }
     
-    func setOffset(offset: CGFloat) {
-        bottomSheetOffset.constant = offset
+    private func constant(for offset: BottomSheetOffset) -> CGFloat {
+        switch offset {
+        case let .specific(offset):
+            return offset
+        case let .relative(percentage, offsettedBy):
+            return view.safeAreaInsets.bottom + (safeAreaContentView.frame.height * percentage) + offsettedBy
+        }
+    }
+    
+    func setConstant(constant: CGFloat) {
+        bottomSheetOffset.constant = constant
+    }
+    
+    func setOffset(offset: BottomSheetOffset, animated: Bool = true, velocity: CGFloat = 0, completion: ((Bool) -> Void)?) {
+        if !animated {
+            setConstant(constant: constant(for: offset))
+        }
+        var distance = constant(for: offset) - bottomSheetOffset.constant
+        distance = distance == 0 ? 1 : distance
+        UIView.animate(
+            withDuration: 0.8,
+            delay: 0,
+            usingSpringWithDamping: velocity == 0 ? 0 : 0.7,
+            initialSpringVelocity: distance == 0 ? velocity : velocity / distance,
+            options: .allowUserInteraction,
+            animations: {
+                self.setConstant(constant: self.constant(for: offset))
+                self.view.layoutIfNeeded()
+            },
+            completion: completion
+        )
+    }
+    
+    func nearestOffset(for projection: CGFloat) -> BottomSheetOffset {
+        let offsets = self.offsets
+        let index = offsets
+            .map(constant(for:))
+            .enumerated()
+            .map { index, offset in (index, abs(offset - projection)) }
+            .min { $0.1 < $1.1 }?.0
+        return index != nil ? offsets[index!] : BottomSheetDefaultLevel.min.offset
     }
 }
