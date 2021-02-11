@@ -23,7 +23,20 @@ public enum BottomSheetDefaultLevel: BottomSheetLevel {
     }
 }
 
-public enum BottomSheetOffset {
+public enum BottomSheetOffset: RawRepresentable, Equatable {
+    public init?(rawValue: CGFloat) {
+        nil
+    }
+    
+    public var rawValue: CGFloat {
+        switch self {
+        case let .relative(_, offsettedBy):
+            return offsettedBy
+        case let .specific(offset):
+            return offset
+        }
+    }
+    
     case relative(percentage: CGFloat, offsettedBy: CGFloat = 0)
     case specific(offset: CGFloat)
 }

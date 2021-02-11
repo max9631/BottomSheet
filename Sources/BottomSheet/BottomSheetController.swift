@@ -1,7 +1,7 @@
 
 import UIKit
 
-public class BottomSheetController: UIViewController {
+public class BottomSheetController<LevelType: BottomSheetLevel>: UIViewController {
     // Contained view controllers
     public var masterViewController: UIViewController!
     public var overlayViewController: UIViewController!
@@ -54,8 +54,11 @@ public class BottomSheetController: UIViewController {
     private var isRegularSizeClass: Bool { traitCollection.horizontalSizeClass == .regular }
     
     // Computed properties
-    private var delegate: BottomSheetDelegateBase? {
-        [(overlayViewController as? UINavigationController)?.presentingViewController, overlayViewController]
+    
+    
+    internal var delegate: BottomSheetDelegateBase? {
+        [
+            (overlayViewController as? UINavigationController)?.presentingViewController, overlayViewController]
             .compactMap { $0 as? BottomSheetDelegateBase }
             .first
     }
@@ -64,7 +67,7 @@ public class BottomSheetController: UIViewController {
         delegate?.offsets ?? BottomSheetDefaultLevel.allCases.map(\.offset)
     }
     
-    init(masterViewController: UIViewController, overlayViewController: UIViewController) {
+    init(masterViewController: UIViewController, overlayViewController: UIViewController, levelDefinition: LevelType) {
         super.init(nibName: nil, bundle: nil)
         self.masterViewController = masterViewController
         self.overlayViewController = overlayViewController
@@ -107,7 +110,17 @@ public class BottomSheetController: UIViewController {
         NSLayoutConstraint.deactivate(activateRegular ? compactConstraints : regularConstraints)
         NSLayoutConstraint.activate(activateRegular ? regularConstraints : compactConstraints)
     }
+    
+    public func setOffset(offset: BottomSheetOffset, animated: Bool = true, completion: ((Bool) -> Void)? = nil) {
+        setOffset(offset: offset, animated: animated, velocity: 0, completion: completion)
+    }
 }
+
+//public extension BottomSheetDelegate where LevelType == BottomSheetDefaultLevel {
+//    convenience init(<#parameters#>) {
+//        <#statements#>
+//    }
+//}
 
 private extension BottomSheetController {
     func setupComposition() {
@@ -142,7 +155,7 @@ extension BottomSheetController: BottomSheetPositionDelegate {
         bottomSheetOffset.constant = constant
     }
     
-    func setOffset(offset: BottomSheetOffset, animated: Bool = true, velocity: CGFloat = 0, completion: ((Bool) -> Void)?) {
+    func setOffset(offset: BottomSheetOffset, animated: Bool = true, velocity: CGFloat = 0, completion: ((Bool) -> Void)? = nil) {
         if !animated {
             setConstant(constant: constant(for: offset))
         }

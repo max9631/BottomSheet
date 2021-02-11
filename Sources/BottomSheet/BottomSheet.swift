@@ -8,6 +8,8 @@
 import UIKit
 
 protocol BottomSheetPositionDelegate: class {
+    var delegate: BottomSheetDelegateBase? { get }
+    
     var corrdinateSystem: UIView { get }
     var sheetOffset: CGFloat { get }
     
