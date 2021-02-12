@@ -110,17 +110,13 @@ public class BottomSheetController<LevelType: BottomSheetLevel>: UIViewControlle
         NSLayoutConstraint.deactivate(activateRegular ? compactConstraints : regularConstraints)
         NSLayoutConstraint.activate(activateRegular ? regularConstraints : compactConstraints)
     }
-    
-    public func setOffset(offset: BottomSheetOffset, animated: Bool = true, completion: ((Bool) -> Void)? = nil) {
-        setOffset(offset: offset, animated: animated, velocity: 0, completion: completion)
-    }
 }
 
-//public extension BottomSheetDelegate where LevelType == BottomSheetDefaultLevel {
-//    convenience init(<#parameters#>) {
-//        <#statements#>
-//    }
-//}
+public extension BottomSheetController {
+    func setLevel(_ level: LevelType, animated: Bool = true, completion: ((Bool) -> Void)? = nil) {
+        setOffset(offset: level.offset, animated: animated, velocity: 0, completion: completion)
+    }
+}
 
 private extension BottomSheetController {
     func setupComposition() {
