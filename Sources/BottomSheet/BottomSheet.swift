@@ -11,44 +11,43 @@ protocol BottomSheetPositionDelegate: class {
     var delegate: BottomSheetDelegateBase? { get }
     
     var corrdinateSystem: UIView { get }
-    var sheetOffset: CGFloat { get }
+    var currentHeight: CGFloat { get }
     
-    func setConstant(constant: CGFloat)
+    func setHeight(constant: CGFloat)
     func nearestOffset(for projection: CGFloat) -> BottomSheetOffset
     func setOffset(offset: BottomSheetOffset, animated: Bool, velocity: CGFloat, completion: ((Bool) -> Void)?)
 }
 
 struct GestureProperties {
-    var initialOffset: CGFloat = .zero
+    var initialHeight: CGFloat = .zero
 }
 
-class BottomSheet: UIView {
+class BottomSheet: ContainerView {
 //    weak var overlayView: UIView?
     weak var delegate: BottomSheetPositionDelegate?
     
     // gesture properties
     var gesture: GestureProperties = GestureProperties()
     
-    init(overlayViewController: UIViewController, delegate: BottomSheetPositionDelegate) {
-        self.delegate = delegate
-        super.init(frame: .zero)
-        backgroundColor = .white
-        let recognizer = UIPanGestureRecognizer(target: self, action: #selector(BottomSheet.pan(gesture:)))
-        recognizer.delegate = self
-        addGestureRecognizer(recognizer)
-        addSubview(overlayViewController.view)
-        guard let overlayView = overlayViewController.view else { return }
-        overlayView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            overlayView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            overlayView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            overlayView.topAnchor.constraint(equalTo: topAnchor),
-            overlayView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: delegate.corrdinateSystem.safeAreaInsets.bottom)
-        ])
+    override init() {
+        super.init()
+        setupGesture()
+    }
+    
+    override init(with view: UIView) {
+        super.init(with: view)
+        setupGesture()
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+        setupGesture()
+    }
+    
+    func setupGesture() {
+        let recognizer = UIPanGestureRecognizer(target: self, action: #selector(BottomSheet.pan(gesture:)))
+        recognizer.delegate = self
+        addGestureRecognizer(recognizer)
     }
     
     @objc
@@ -57,18 +56,18 @@ class BottomSheet: UIView {
         let dy = -recognizer.translation(in: delegate.corrdinateSystem).y
         switch recognizer.state {
         case .began:
-            gesture.initialOffset = delegate.sheetOffset
+            gesture.initialHeight = delegate.currentHeight
         case .ended:
             let velocity = -recognizer.velocity(in: delegate.corrdinateSystem).y // [points/second] - up, + down
             let decelerationRate = UIScrollView.DecelerationRate.fast.rawValue
             let projectedDistance = (velocity / 1000) * decelerationRate / (1.0 - decelerationRate)
-            let projection = gesture.initialOffset + dy + projectedDistance
+            let projection = gesture.initialHeight + dy + projectedDistance
             let nearestOffset = delegate.nearestOffset(for: projection)
             delegate.setOffset(offset: nearestOffset, animated: true, velocity: velocity, completion: nil)
 //            delegate.setOffset(offset: nearestOffset)
             break
         case .changed:
-            delegate.setConstant(constant: gesture.initialOffset + dy)
+            delegate.setHeight(constant: gesture.initialHeight + dy)
         default:
             break
         }
