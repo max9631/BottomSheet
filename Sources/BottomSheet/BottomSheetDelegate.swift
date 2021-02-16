@@ -10,41 +10,44 @@
 //}
 
 import UIKit
-public protocol BottomSheetDelegateBase {
-    
-    var scrollView: UIScrollView? { get }
-//    var initialOffset: BottomSheetOffset { get }
-    var offsets: [BottomSheetOffset] { get }
-}
 
-public protocol BottomSheetLevelDelegate: BottomSheetDelegateBase {
-    associatedtype LevelType: BottomSheetLevel
+public struct BottomSheetControllerInterface<LevelType: BottomSheetAnchorPoint> {
+    private var controller: BottomSheetController
     
-    var bottomSheet: BottomSheetController<LevelType>? { get }
-    var scrollView: UIScrollView? { get }
-//    var initialLevel: LevelType { get }
-}
-
-public extension BottomSheetLevelDelegate {
-    var scrollView: UIScrollView? { nil } // Making it optional to implement
+    public init(controller: BottomSheetController) {
+        self.controller = controller
+    }
     
-    // overrides of its super-protocol
-//    var initialOffset: BottomSheetOffset { return initialLevel.offset }
-    var offsets: [BottomSheetOffset] { LevelType.allCases.map(\.offset) }
-    
-    // for convenience
-    var bottomSheet: BottomSheetController<LevelType>? { nil }
-}
-
-public extension BottomSheetLevelDelegate where Self: UIViewController {
-    var bottomSheet: BottomSheetController<LevelType>? {
-        [navigationController?.view.superview, view.superview]
-            .compactMap { $0 as? BottomSheet }
-            .compactMap { $0.delegate as? BottomSheetController }
-            .first
+    public func set(level: LevelType, animated: Bool = true) {
+        controller.setOffset(offset: level.offset, animated: animated)
     }
 }
 
-public protocol BottomSheetDelegate: BottomSheetLevelDelegate {
-    var initialLevel: BottomSheetDefaultLevel { get }
+public protocol BottomSheetDelegateBase {
+    var scrollView: UIScrollView? { get }
+    var offsets: [BottomSheetOffset] { get }
 }
+
+public protocol BottomSheetAnchorTypeDelegate: BottomSheetDelegateBase {
+    associatedtype LevelType: BottomSheetAnchorPoint
+    
+    var bottomSheet: BottomSheetController? { get }
+    var scrollView: UIScrollView? { get }
+}
+
+public extension BottomSheetAnchorTypeDelegate {
+    var scrollView: UIScrollView? { nil } // Making it optional to implement
+    var offsets: [BottomSheetOffset] { LevelType.allCases.map(\.offset) }
+    var bottomSheet: BottomSheetController? { nil }
+}
+
+public extension BottomSheetAnchorTypeDelegate where Self: UIViewController {
+    var bottomSheet: BottomSheetControllerInterface<LevelType>? {
+        [navigationController?.parent, parent]
+            .compactMap { $0 as? BottomSheetController }
+            .first
+            .flatMap { BottomSheetControllerInterface(controller: $0) }
+    }
+}
+
+public protocol BottomSheetDelegate: BottomSheetAnchorTypeDelegate where LevelType == BottomSheetDefaultLevel { }
