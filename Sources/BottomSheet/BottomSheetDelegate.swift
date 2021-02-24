@@ -50,4 +50,4 @@ public extension BottomSheetAnchorTypeDelegate where Self: UIViewController {
     }
 }
 
-public protocol BottomSheetDelegate: BottomSheetAnchorTypeDelegate where LevelType == BottomSheetDefaultLevel { }
+public protocol BottomSheetDelegate: BottomSheetAnchorTypeDelegate where LevelType == BottomSheetDefaultAnchorPoint { }

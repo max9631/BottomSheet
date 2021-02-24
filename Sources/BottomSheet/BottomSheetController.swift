@@ -1,17 +1,10 @@
 
 import UIKit
 
-extension UIViewController {
-    var asBottomSheetdelegate: BottomSheetDelegateBase? {
-        switch self {
-        case let controller as UINavigationController:
-            return controller.presentingViewController?.asBottomSheetdelegate
-        case let controller as UITabBarController:
-            return controller.presentingViewController?.asBottomSheetdelegate
-        default:
-            return self as? BottomSheetDelegateBase
-        }
-    }
+public protocol BottomSheetControllerDelegate {
+    func bottomSheetWillChangeContext(to viewController: UIViewController)
+    func bottomSheetDidChangeContext(to viewController: UIViewController)
+    func bottomSheetDidChangeHeight(to height: CGFloat)
 }
 
 @IBDesignable
@@ -27,24 +20,21 @@ public class BottomSheetController: UIViewController {
     private var bottomSheetOffsetConstraint: NSLayoutConstraint?
     
     // Helper Views
-    @IBInspectable var bottomSheet: BottomSheet = BottomSheet()
-    @IBInspectable var masterContainer: ContainerView = ContainerView()
-    private var safeAreaContentView: UIView = UIView()
+    var bottomSheet: BottomSheet = BottomSheet()
+    var masterContainer: ContainerView = ContainerView()
+    private var contentFrameView: UIView = UIView()
     
     // MARK: - Properties
-    // Properties
-    private var gestureInitialSheetOffset: CGFloat = .zero
-    
     // Public properties
-    public var initialHeight: CGFloat = 400
+    @IBInspectable public var initialHeight: CGFloat = 400
     public var currentHeight: CGFloat { bottomSheetOffsetConstraint?.constant ?? initialHeight }
     
     // Computed properties
-    internal var maxContentHeight: CGFloat { safeAreaContentView.frame.height }
+    internal var maxContentHeight: CGFloat { contentFrameView.frame.height }
     internal var isRegularSizeClass: Bool { traitCollection.horizontalSizeClass == .regular }
     
     // MARK: - Initializers
-    public init(masterViewController: UIViewController, overlayViewController: UIViewController, initialHeight: CGFloat = 0) {
+    public init(masterViewController: UIViewController, overlayViewController: UIViewController, initialHeight: CGFloat = 400) {
         super.init(nibName: nil, bundle: nil)
         self.masterViewController = masterViewController
         self.contextViewControllers = [overlayViewController]
@@ -54,6 +44,18 @@ public class BottomSheetController: UIViewController {
     public required init?(coder: NSCoder) {
         super.init(coder: coder)
     }
+    
+    //
+//    public override class func prepareForInterfaceBuilder() {
+//        super.prepareForInterfaceBuilder()
+//        let bundle = Bundle(for: Self.self)
+//        let view = UINib(nibName: "BottomSheetController", bundle: bundle).instantiate(withOwner: self) as! BottomSheetController
+////        let view = nib.instantiateWithOwner(self, options: nil)[0] as! UIView
+//
+//        return view
+//    }
+//
+//    loadView
     
     // MARK: - UIViewController methods
     public override func loadView() {
@@ -101,13 +103,22 @@ public extension BottomSheetController {
         let activateRegular = isRegularSizeClass
         NSLayoutConstraint.deactivate(activateRegular ? compactConstraints : regularConstraints)
         NSLayoutConstraint.activate(activateRegular ? regularConstraints : compactConstraints)
+        updateSafeAreaInsets()
+    }
+    
+    func updateSafeAreaInsets() {
+        if isRegularSizeClass {
+            masterViewController?.additionalSafeAreaInsets = .init(top: 0, left: 320 + 16 + 16, bottom: 0, right: 0)
+        } else {
+            masterViewController?.additionalSafeAreaInsets = .init(top: 0, left: 0, bottom: 0, right: 0)
+        }
     }
     
     func showMaster(with viewController: UIViewController) {
         if let master = masterViewController {
             master.willMove(toParent: nil)
             master.view.removeFromSuperview()
-            masterViewController?.removeFromParent()
+            master.removeFromParent()
         }
         addChild(viewController)
         masterViewController = viewController
@@ -119,24 +130,26 @@ public extension BottomSheetController {
         pushContext(viewController: viewController)
     }
     
-    func pushContext(viewController: UIViewController, initialOffset: BottomSheetOffset? = nil) {
+    func pushContext(viewController: UIViewController) {
+        contextViewControllers.append(viewController)
         addChild(viewController)
-        let initialOffset = initialOffset ?? .specific(offset: self.initialHeight)
         setOffset(offset: .specific(offset: 0)) { _ in
-            self.contextViewControllers.append(viewController)
-            self.bottomSheet.embedIn(view: viewController.view, bottomOffset: self.view.safeAreaInsets.bottom)
-            self.setOffset(offset: initialOffset)
+            self.bottomSheet.embedIn(view: viewController.view, bottomPriority: .defaultLow - 10, maxHeight: self.contentFrameView.heightAnchor)
+            self.setOffset(offset: .specific(offset: self.initialHeight))
         }
         viewController.didMove(toParent: self)
+        setOverrideTraitCollection(UITraitCollection(horizontalSizeClass: .compact), forChild: viewController)
     }
     
     func popContext() {
-        _ = contextViewControllers.popLast()
+        guard !contextViewControllers.isEmpty else { return }
+        let controller = contextViewControllers.popLast()
         setOffset(offset: .specific(offset: 0)) { _ in
-            if let controller = self.contextViewControllers.last {
-//                self.contextViewControllers.insert(viewController, at: 0)
-                self.bottomSheet.embedIn(view: controller.view, bottomOffset: self.view.safeAreaInsets.bottom)
-//                self.setOffset(offset: initialOffset)
+            controller?.willMove(toParent: nil)
+            controller?.view.removeFromSuperview()
+            controller?.removeFromParent()
+            if let previousController = self.contextViewControllers.last {
+                self.bottomSheet.embedIn(view: previousController.view, bottomPriority: .defaultLow - 10, maxHeight: self.contentFrameView.heightAnchor)
             }
         }
     }
@@ -145,25 +158,25 @@ public extension BottomSheetController {
 // MARK: - Layout definition
 private extension BottomSheetController {
     func setupComposition() {
-        view.addSubview(safeAreaContentView)
+        view.addSubview(contentFrameView)
         view.addSubview(masterContainer)
         view.addSubview(bottomSheet)
         createContentViewLayout()
         createMasterContainer()
         createBottomSheetLayout()
         view.sendSubviewToBack(masterContainer)
-        view.sendSubviewToBack(safeAreaContentView)
+        view.sendSubviewToBack(contentFrameView)
     }
     
     func createContentViewLayout() {
-        let contentView = safeAreaContentView
+        let contentView = contentFrameView
         contentView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(contentView)
         NSLayoutConstraint.activate([
             contentView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             contentView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            contentView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            contentView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
     }
     
@@ -190,15 +203,16 @@ private extension BottomSheetController {
         ]
         let bottomSheetOffset = view.bottomAnchor.constraint(equalTo: sheet.topAnchor, constant: initialHeight)
         self.bottomSheetOffsetConstraint = bottomSheetOffset
-        let heightConstraint = sheet.heightAnchor.constraint(equalTo: safeAreaContentView.heightAnchor)
+        let heightConstraint = sheet.heightAnchor.constraint(equalTo: contentFrameView.heightAnchor)
         heightConstraint.priority = .defaultLow
         compactConstraints = [
             sheet.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             sheet.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             bottomSheetOffset,
-            heightConstraint
+            heightConstraint,
+            sheet.bottomAnchor.constraint(greaterThanOrEqualTo: view.bottomAnchor)
         ]
-        NSLayoutConstraint.activate(isRegularSizeClass ? regularConstraints : compactConstraints)
+        changeLayoutIfNeeded()
     }
 }
 
@@ -210,17 +224,23 @@ extension BottomSheetController: BottomSheetPositionDelegate {
     }
     
     internal var offsets: [BottomSheetOffset] {
-        delegate?.offsets ?? BottomSheetDefaultLevel.allCases.map(\.offset)
+        delegate?.offsets ?? BottomSheetDefaultAnchorPoint.allCases.map(\.offset)
     }
     
     var corrdinateSystem: UIView { view }
     
     internal func constant(for offset: BottomSheetOffset) -> CGFloat {
-        switch offset {
-        case let .specific(offset): return offset
-        case let .relative(percentage, offsettedBy):
-            return view.safeAreaInsets.bottom + (maxContentHeight * percentage) + offsettedBy
+        let constant: CGFloat = {
+            switch offset {
+            case let .specific(offset): return offset
+            case let .relative(percentage, offsettedBy):
+                return (maxContentHeight * percentage) + offsettedBy
+            }
+        }()
+        if let maxHeight = bottomSheet.presentingView?.frame.height, constant > maxHeight {
+            return maxHeight
         }
+        return constant
     }
     
     func setHeight(constant: CGFloat) {

@@ -23,7 +23,6 @@ struct GestureProperties {
 }
 
 class BottomSheet: ContainerView {
-//    weak var overlayView: UIView?
     weak var delegate: BottomSheetPositionDelegate?
     
     // gesture properties
@@ -31,23 +30,24 @@ class BottomSheet: ContainerView {
     
     override init() {
         super.init()
-        setupGesture()
+        setup()
     }
     
     override init(with view: UIView) {
         super.init(with: view)
-        setupGesture()
+        setup()
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-        setupGesture()
+        setup()
     }
     
-    func setupGesture() {
+    func setup() {
         let recognizer = UIPanGestureRecognizer(target: self, action: #selector(BottomSheet.pan(gesture:)))
         recognizer.delegate = self
         addGestureRecognizer(recognizer)
+        backgroundColor = .systemBackground
     }
     
     @objc
@@ -64,7 +64,6 @@ class BottomSheet: ContainerView {
             let projection = gesture.initialHeight + dy + projectedDistance
             let nearestOffset = delegate.nearestOffset(for: projection)
             delegate.setOffset(offset: nearestOffset, animated: true, velocity: velocity, completion: nil)
-//            delegate.setOffset(offset: nearestOffset)
             break
         case .changed:
             delegate.setHeight(constant: gesture.initialHeight + dy)
