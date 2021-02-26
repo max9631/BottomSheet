@@ -7,11 +7,11 @@
 
 import UIKit
 
-public protocol BottomSheetAnchorPoint: CaseIterable {
+public protocol BottomSheetAnchor: CaseIterable {
     var offset: BottomSheetOffset { get }
 }
 
-public enum BottomSheetDefaultAnchorPoint: BottomSheetAnchorPoint {
+public enum BottomSheetDefaultAnchor: BottomSheetAnchor {
     case min, med, max
     
     public var offset: BottomSheetOffset {
