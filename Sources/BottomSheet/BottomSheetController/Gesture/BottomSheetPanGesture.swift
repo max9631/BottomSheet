@@ -21,8 +21,12 @@ protocol BottomSheetSlideGestureDelegate: class {
 struct BottomSheetSlideGesture {
     
     weak var delegate: BottomSheetSlideGestureDelegate?
+    private var initialHeight: CGFloat
     
-    private var initialHeight: CGFloat = .zero
+    init(delegate: BottomSheetSlideGestureDelegate? = nil, initialHeight: CGFloat = .zero) {
+        self.delegate = delegate
+        self.initialHeight = initialHeight
+    }
     
     mutating func slide(gesutre recognizer: UIPanGestureRecognizer) {
         guard let delegate = delegate else { return }
