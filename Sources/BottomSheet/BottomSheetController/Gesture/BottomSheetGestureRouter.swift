@@ -16,7 +16,7 @@ class BottomSheetGestureRouter: NSObject {
     }
     
     lazy var slideGestureRecognizer: UIPanGestureRecognizer = { createGesture(selector: #selector(slide)) }()
-    lazy var scrollGestureRecognizer: UIPanGestureRecognizer = { createGesture(selector: #selector(scroll)) }()
+    private weak var scrollViewGestureRecognizer: UIPanGestureRecognizer?
     
     private var slideGesture: BottomSheetSlideGesture = .init()
     private var scrollGesture: BottomSheetSrollGesture = .init()
@@ -29,6 +29,7 @@ class BottomSheetGestureRouter: NSObject {
     
     func registerScrollViewDelegate(scrollView: UIScrollView) {
         scrollView.panGestureRecognizer.addTarget(self, action: #selector(scroll))
+        scrollViewGestureRecognizer = scrollView.panGestureRecognizer
         scrollGesture.scrollView = scrollView
     }
 }
@@ -48,5 +49,16 @@ extension BottomSheetGestureRouter {
 }
 
 extension BottomSheetGestureRouter: UIGestureRecognizerDelegate {
-    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard let delegate = delegate,
+              let otherPanGestureRecognizer = otherGestureRecognizer as? UIPanGestureRecognizer,
+              otherPanGestureRecognizer == scrollViewGestureRecognizer else {
+            return false
+        }
+        if delegate.currentHeight != delegate.maxHeightConstant
+            ||  scroll{
+                return true
+        }
+        return false
+    }
 }

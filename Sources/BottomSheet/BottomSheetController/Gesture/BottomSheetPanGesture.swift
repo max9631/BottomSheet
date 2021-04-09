@@ -11,9 +11,11 @@ protocol BottomSheetSlideGestureDelegate: class {
     var delegate: BottomSheetDelegateBase? { get }
     
     var corrdinateSystem: UIView { get }
-    var currentHeight: CGFloat { get }
     
+    var maxHeightConstant: CGFloat { get }
+    var currentHeight: CGFloat { get }
     func setHeight(constant: CGFloat)
+    
     func nearestOffset(for projection: CGFloat) -> BottomSheetOffset
     func setOffset(offset: BottomSheetOffset, animated: Bool, velocity: CGFloat, completion: ((Bool) -> Void)?)
 }
@@ -41,7 +43,6 @@ struct BottomSheetSlideGesture {
             let projection = initialHeight + dy + projectedDistance
             let nearestOffset = delegate.nearestOffset(for: projection)
             delegate.setOffset(offset: nearestOffset, animated: true, velocity: velocity, completion: nil)
-            break
         case .changed:
             delegate.setHeight(constant: initialHeight + dy)
         default:

@@ -9,6 +9,7 @@ import UIKit
 
 // MARK: BottomSheetPositionDelegate
 extension BottomSheetController: BottomSheetSlideGestureDelegate {
+    
     // Computed properties
     internal var delegate: BottomSheetDelegateBase? {
         contextViewControllers.first?.asBottomSheetdelegate
@@ -19,6 +20,22 @@ extension BottomSheetController: BottomSheetSlideGestureDelegate {
     }
     
     var corrdinateSystem: UIView { view }
+    
+    
+    var maxHeightConstant: CGFloat {
+        guard let delegate = delegate,
+              let index = delegate.offsets
+                .enumerated()
+                .map({ (index, offset) in
+                    return (index, constant(for: offset))
+                })
+                .max(by: { (max, next) -> Bool in
+                    return max.1 < next.1
+                })?.0 else {
+            return constant(for: BottomSheetDefaultAnchor.max.offset)
+        }
+        return constant(for: delegate.offsets[index])
+    }
     
     internal func constant(for offset: BottomSheetOffset) -> CGFloat {
         let constant: CGFloat = {
