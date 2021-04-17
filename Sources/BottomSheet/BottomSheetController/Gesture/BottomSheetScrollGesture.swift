@@ -50,7 +50,7 @@ class BottomSheetSrollGesture {
             fallthrough
         case .changed:
             let justStartedSliding = isInSlideState && !wasInSlideState
-            let justEndedSliding = !isInSlideState && wasInSlideState
+//            let justEndedSliding = !isInSlideState && wasInSlideState
             if justStartedSliding {
                 initialHeight = delegate.currentHeight
                 activationLocation = recognizer.location(in: delegate.corrdinateSystem).y

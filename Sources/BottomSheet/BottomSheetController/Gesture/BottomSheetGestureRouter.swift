@@ -55,8 +55,7 @@ extension BottomSheetGestureRouter: UIGestureRecognizerDelegate {
               otherPanGestureRecognizer == scrollViewGestureRecognizer else {
             return false
         }
-        if delegate.currentHeight != delegate.maxHeightConstant
-            ||  scroll{
+        if delegate.currentHeight != delegate.maxHeightConstant {//||  scroll {
                 return true
         }
         return false
