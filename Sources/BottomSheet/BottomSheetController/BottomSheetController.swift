@@ -7,7 +7,7 @@ public protocol BottomSheetControllerDelegate {
     func bottomSheetDidChangeHeight(to height: CGFloat)
 }
 
-public class BottomSheetController: UIViewController {
+open class BottomSheetController: UIViewController {
     // MARK: - Contained view controllers
     public var masterViewController: UIViewController?
     public var contextViewControllers: [UIViewController] = []
@@ -48,7 +48,7 @@ public class BottomSheetController: UIViewController {
     }
     
     // MARK: - UIViewController methods
-    public override func loadView() {
+    open override func loadView() {
         super.loadView()
         if (storyboard != nil) {
             performSegue(withIdentifier: "master", sender: self)
@@ -56,11 +56,11 @@ public class BottomSheetController: UIViewController {
         }
     }
     
-    public override func performSegue(withIdentifier identifier: String, sender: Any?) {
+    open override func performSegue(withIdentifier identifier: String, sender: Any?) {
         super.performSegue(withIdentifier: identifier, sender: sender)
     }
     
-    public override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+    open override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         switch segue.identifier {
             case "master": masterViewController = segue.destination
             case "overlay": contextViewControllers.insert(segue.destination, at: 0)
@@ -68,7 +68,7 @@ public class BottomSheetController: UIViewController {
         }
     }
     
-    public override func viewDidLoad() {
+    open override func viewDidLoad() {
         super.viewDidLoad()
         gestureRouter.delegate = self
         setupComposition()
@@ -80,7 +80,7 @@ public class BottomSheetController: UIViewController {
         }
     }
     
-    public override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+    open override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
         changeLayoutIfNeeded()
     }
