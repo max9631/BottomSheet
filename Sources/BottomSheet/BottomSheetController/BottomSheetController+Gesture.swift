@@ -12,7 +12,7 @@ extension BottomSheetController: BottomSheetSlideGestureDelegate {
     
     // Computed properties
     internal var delegate: BottomSheetDelegateBase? {
-        contextViewControllers.first?.asBottomSheetdelegate
+        contextViewControllers.last?.asBottomSheetdelegate
     }
     
     internal var offsets: [BottomSheetOffset] {
@@ -40,9 +40,10 @@ extension BottomSheetController: BottomSheetSlideGestureDelegate {
     internal func constant(for offset: BottomSheetOffset) -> CGFloat {
         let constant: CGFloat = {
             switch offset {
-            case let .specific(offset): return offset
+            case let .specific(offset):
+                return offset
             case let .relative(percentage, offsettedBy):
-                return (maxContentHeight * percentage) + offsettedBy
+                return (maxContentHeight * percentage.clamp(from: 0, to: 1)) + offsettedBy
             }
         }()
         if let maxHeight = bottomSheet.presentingView?.frame.height, constant > maxHeight {
@@ -51,31 +52,25 @@ extension BottomSheetController: BottomSheetSlideGestureDelegate {
         return constant
     }
     
-    func setHeight(constant: CGFloat) {
-        guard let constraint = bottomSheetOffsetConstraint else {
-            initialHeight = constant
-            return
-        }
-        constraint.constant = constant
-    }
-    
     public func setOffset(offset: BottomSheetOffset, animated: Bool = true, velocity: CGFloat = 0, completion: ((Bool) -> Void)? = nil) {
         let closure = {
-            self.setHeight(constant: self.constant(for: offset))
+            self.position.setHeight(constant: self.constant(for: offset))
             self.view.layoutIfNeeded()
         }
         guard animated else {
-            closure()
-            completion?(false)
+            DispatchQueue.main.async {
+                closure()
+                completion?(false)
+            }
             return
         }
-        var distance = constant(for: offset) - currentHeight
+        var distance = constant(for: offset) - position.currentHeight
         distance = distance == 0 ? 1 : distance
         UIView.animate(
             withDuration: 0.7,
             delay: 0,
             usingSpringWithDamping: velocity == 0 ? 1 : 0.7,
-            initialSpringVelocity: distance == 0 ? velocity : velocity / distance,
+            initialSpringVelocity: velocity / distance,
             options: .allowUserInteraction,
             animations: closure,
             completion: completion
@@ -89,6 +84,6 @@ extension BottomSheetController: BottomSheetSlideGestureDelegate {
             .enumerated()
             .map { index, offset in (index, abs(offset - projection)) }
             .min { $0.1 < $1.1 }?.0
-        return index != nil ? offsets[index!] : .specific(offset: initialHeight)
+        return index != nil ? offsets[index!] : .specific(offset: .zero)
     }
 }

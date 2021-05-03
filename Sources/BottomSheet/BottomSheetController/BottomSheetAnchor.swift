@@ -18,7 +18,7 @@ public enum BottomSheetDefaultAnchor: BottomSheetAnchor {
         switch self {
         case .max: return .relative(percentage: 1)
         case .med: return .relative(percentage: 0.45)
-        case .min: return .specific(offset: 0)
+        case .min: return .specific(offset: 100)
         }
     }
 }

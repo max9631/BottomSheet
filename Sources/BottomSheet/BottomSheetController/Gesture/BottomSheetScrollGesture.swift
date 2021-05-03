@@ -34,7 +34,7 @@ class BottomSheetSrollGesture {
         guard let scrollView = scrollView else { return true }
         let topOffset = scrollView.normalizedContentOffset
         return !upDirection && topOffset.y <= 0
-            || delegate.currentHeight < maxHeight
+            || delegate.position.currentHeight < maxHeight
     }
     
     
@@ -52,7 +52,7 @@ class BottomSheetSrollGesture {
             let justStartedSliding = isInSlideState && !wasInSlideState
 //            let justEndedSliding = !isInSlideState && wasInSlideState
             if justStartedSliding {
-                initialHeight = delegate.currentHeight
+                initialHeight = delegate.position.currentHeight
                 activationLocation = recognizer.location(in: delegate.corrdinateSystem).y
                 initialContentOffset = scrollView.contentOffset
             }
@@ -61,7 +61,7 @@ class BottomSheetSrollGesture {
                 scrollView.contentOffset.y = initialContentOffset.y
                 let currentLocation = recognizer.location(in: delegate.corrdinateSystem).y
                 let translation = activationLocation - currentLocation
-                delegate.setHeight(constant: initialHeight + translation)
+                delegate.position.setHeight(constant: initialHeight + translation)
             }
         case .ended:
             if isInSlideState {

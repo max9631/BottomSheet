@@ -10,22 +10,11 @@ import UIKit
 // MARK: - Navigation interface
 public extension BottomSheetController {
     func changeLayoutIfNeeded() {
-        let activateRegular = isRegularSizeClass
-        NSLayoutConstraint.deactivate(activateRegular ? compactConstraints : regularConstraints)
-        NSLayoutConstraint.activate(activateRegular ? regularConstraints : compactConstraints)
-        updateSafeAreaInsets()
-    }
-    
-    func updateSafeAreaInsets() {
-        if isRegularSizeClass {
-            masterViewController?.additionalSafeAreaInsets = .init(top: 0, left: 320 + 16 + 16, bottom: 0, right: 0)
-        } else {
-            masterViewController?.additionalSafeAreaInsets = .init(top: 0, left: 0, bottom: 0, right: 0)
-        }
+        position.changeHorizontalSizeClass(isRegular: isRegularSizeClass)
     }
     
     func showMaster(with viewController: UIViewController) {
-        if let master = masterViewController {
+        if let master = masterViewController, master != viewController {
             master.willMove(toParent: nil)
             master.view.removeFromSuperview()
             master.removeFromParent()
@@ -36,16 +25,37 @@ public extension BottomSheetController {
         viewController.didMove(toParent: self)
     }
     
-    func showBottomSheet(with viewController: UIViewController) {
-        pushContext(viewController: viewController)
+    func showBottomSheet(with viewController: UIViewController, at offset: BottomSheetOffset? = nil, animated: Bool) {
+        pushContext(viewController: viewController, at: offset, animated: animated)
     }
     
-    func pushContext(viewController: UIViewController) {
-        contextViewControllers.append(viewController)
-        addChild(viewController)
+    func repalceContext(with viewController: UIViewController, at offset: BottomSheetOffset? = nil, animated: Bool) {
+        guard !contextViewControllers.isEmpty else { return }
+        let controller = contextViewControllers.popLast()
         setOffset(offset: .specific(offset: 0)) { _ in
+            controller?.willMove(toParent: nil)
+            controller?.view.removeFromSuperview()
+            controller?.removeFromParent()
+            self.contextViewControllers.append(viewController)
+            self.addChild(viewController)
             self.bottomSheet.embedIn(view: viewController.view, bottomPriority: .defaultLow - 10, maxHeight: self.contentFrameView.heightAnchor)
-            self.setOffset(offset: .specific(offset: self.initialHeight))
+            if let offset = offset {
+                self.setOffset(offset: offset, animated: animated)
+            }
+            viewController.didMove(toParent: self)
+            self.setOverrideTraitCollection(UITraitCollection(horizontalSizeClass: .compact), forChild: viewController)
+        }
+    }
+    
+    func pushContext(viewController: UIViewController, at offset: BottomSheetOffset? = nil, animated: Bool) {
+        self.contextViewControllers.append(viewController)
+        self.addChild(viewController)
+        setOffset(offset: .specific(offset: 0), animated: animated) { _ in
+            self.bottomSheet.embedIn(view: viewController.view, bottomPriority: .defaultLow - 10, maxHeight: self.contentFrameView.heightAnchor)
+            self.bottomSheet.layoutIfNeeded()
+            if let offset = offset {
+                self.setOffset(offset: offset, animated: animated)
+            }
         }
         viewController.didMove(toParent: self)
         setOverrideTraitCollection(UITraitCollection(horizontalSizeClass: .compact), forChild: viewController)

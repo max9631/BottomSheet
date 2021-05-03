@@ -47,26 +47,7 @@ private extension BottomSheetController {
     }
     
     func createBottomSheetLayout() {
-        let sheet = bottomSheet
-        sheet.addGestureRecognizer(gestureRouter.slideGestureRecognizer)
-        sheet.translatesAutoresizingMaskIntoConstraints = false
-        regularConstraints = [
-            sheet.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
-            sheet.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
-            sheet.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
-            sheet.widthAnchor.constraint(equalToConstant: 320)
-        ]
-        let bottomSheetOffset = view.bottomAnchor.constraint(equalTo: sheet.topAnchor, constant: initialHeight)
-        self.bottomSheetOffsetConstraint = bottomSheetOffset
-        let heightConstraint = sheet.heightAnchor.constraint(equalTo: contentFrameView.heightAnchor)
-        heightConstraint.priority = .defaultLow
-        compactConstraints = [
-            sheet.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            sheet.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            bottomSheetOffset,
-            heightConstraint,
-            sheet.bottomAnchor.constraint(greaterThanOrEqualTo: view.bottomAnchor)
-        ]
+        bottomSheet.addGestureRecognizer(gestureRouter.slideGestureRecognizer)
         changeLayoutIfNeeded()
     }
 }

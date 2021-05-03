@@ -11,36 +11,29 @@ open class BottomSheetController: UIViewController {
     // MARK: - Contained view controllers
     public var masterViewController: UIViewController?
     public var contextViewControllers: [UIViewController] = []
+    public var visibleContextViewController: UIViewController? { contextViewControllers.last }
     
     // MARK: - BottomSheet subviews
-    // Constraints
-    internal var regularConstraints: [NSLayoutConstraint] = []
-    internal var compactConstraints: [NSLayoutConstraint] = []
-    internal var bottomSheetOffsetConstraint: NSLayoutConstraint?
+    // Position
+    public lazy var position: BottomSheetPosition = { BottomSheetPosition(embed: bottomSheet, in: self) }()
     
     // Helper Views
-    internal var bottomSheet: ContainerView = ContainerView()
-    internal var masterContainer: ContainerView = ContainerView()
-    internal var contentFrameView: UIView = UIView()
-    
-    // MARK: - Properties
-    // Public properties
-    public var initialHeight: CGFloat = 400
-    public var currentHeight: CGFloat { bottomSheetOffsetConstraint?.constant ?? initialHeight }
+    public var bottomSheet: ContainerView = ContainerView()
+    var masterContainer: ContainerView = ContainerView()
+    var contentFrameView: UIView = UIView()
     
     // Computed properties
-    internal var maxContentHeight: CGFloat { contentFrameView.frame.height }
-    internal var isRegularSizeClass: Bool { traitCollection.horizontalSizeClass == .regular }
+    var maxContentHeight: CGFloat { contentFrameView.frame.height }
+    var isRegularSizeClass: Bool { traitCollection.horizontalSizeClass == .regular }
     
     // Gestures
     var gestureRouter: BottomSheetGestureRouter = .init()
     
     // MARK: - Initializers
-    public init(masterViewController: UIViewController, overlayViewController: UIViewController, initialHeight: CGFloat = 400) {
+    public init(masterViewController: UIViewController, overlayViewController: UIViewController) {
         super.init(nibName: nil, bundle: nil)
-        self.masterViewController = masterViewController
-        self.contextViewControllers = [overlayViewController]
-        self.initialHeight = initialHeight
+        showMaster(with: masterViewController)
+        showBottomSheet(with: overlayViewController, at: .specific(offset: .zero), animated: false)
     }
     
     public required init?(coder: NSCoder) {
@@ -62,22 +55,17 @@ open class BottomSheetController: UIViewController {
     
     open override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         switch segue.identifier {
-            case "master": masterViewController = segue.destination
-            case "overlay": contextViewControllers.insert(segue.destination, at: 0)
+            case "master": showMaster(with: segue.destination)
+            case "overlay": showBottomSheet(with: segue.destination, at: .specific(offset: .zero), animated: false)
             default: break
         }
     }
     
     open override func viewDidLoad() {
         super.viewDidLoad()
+        bottomSheet.backgroundColor = .systemBackground
         gestureRouter.delegate = self
         setupComposition()
-        if let controller = masterViewController {
-            showMaster(with: controller)
-        }
-        if let controller = contextViewControllers.first {
-            showBottomSheet(with: controller)
-        }
     }
     
     open override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {

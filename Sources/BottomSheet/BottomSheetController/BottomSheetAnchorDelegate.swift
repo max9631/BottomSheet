@@ -24,7 +24,6 @@ public struct BottomSheetHook<AnchorType: BottomSheetAnchor> {
 }
 
 public protocol BottomSheetDelegateBase {
-    var scrollView: UIScrollView? { get }
     var offsets: [BottomSheetOffset] { get }
 }
 
@@ -33,15 +32,12 @@ public protocol BottomSheetAnchorDelegate: BottomSheetDelegateBase {
 }
 
 public extension BottomSheetAnchorDelegate {
-    var scrollView: UIScrollView? { nil } // Making it optional to implement
     var offsets: [BottomSheetOffset] { AnchorType.allCases.map(\.offset) }
 }
 
 public extension BottomSheetAnchorDelegate where Self: UIViewController {
     var hook: BottomSheetHook<AnchorType>? {
-        [navigationController?.parent, parent]
-            .first { $0 is BottomSheetController }
-            .flatMap { $0 as? BottomSheetController }
+        bottomSheetController
             .flatMap { BottomSheetHook(controller: $0) }
     }
 }

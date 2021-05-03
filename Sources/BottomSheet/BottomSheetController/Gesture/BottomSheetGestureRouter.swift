@@ -37,6 +37,9 @@ class BottomSheetGestureRouter: NSObject {
 extension BottomSheetGestureRouter {
     @objc
     func slide(gesture recognizer: UIPanGestureRecognizer) {
+        guard delegate?.position.hasSlidablePrezentation != false else {
+            return
+        }
         slideGesture.slide(gesutre: recognizer)
     }
 }
@@ -44,6 +47,9 @@ extension BottomSheetGestureRouter {
 extension BottomSheetGestureRouter {
     @objc
     func scroll(gesture recognizer: UIPanGestureRecognizer) {
+        guard delegate?.position.hasSlidablePrezentation != false else {
+            return
+        }
         scrollGesture.scroll(gesture: recognizer)
     }
 }
@@ -55,7 +61,8 @@ extension BottomSheetGestureRouter: UIGestureRecognizerDelegate {
               otherPanGestureRecognizer == scrollViewGestureRecognizer else {
             return false
         }
-        if delegate.currentHeight != delegate.maxHeightConstant {//||  scroll {
+        if delegate.position.hasSlidablePrezentation,
+           delegate.position.currentHeight != delegate.maxHeightConstant {
                 return true
         }
         return false

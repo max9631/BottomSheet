@@ -7,7 +7,7 @@
 
 import UIKit
 
-internal class ContainerView: UIView {
+public class ContainerView: UIView {
     weak var presentingView: UIView?
     
     init() {
