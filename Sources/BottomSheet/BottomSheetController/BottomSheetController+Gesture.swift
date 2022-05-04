@@ -16,7 +16,7 @@ extension BottomSheetController: BottomSheetSlideGestureDelegate {
     }
     
     internal var offsets: [BottomSheetOffset] {
-        delegate?.offsets ?? BottomSheetDefaultAnchor.allCases.map(\.offset)
+        delegate?.offsets ?? BottomSheetDefaultAnchor.allCases.map(\.rawValue)
     }
     
     var corrdinateSystem: UIView { view }
@@ -32,7 +32,7 @@ extension BottomSheetController: BottomSheetSlideGestureDelegate {
                 .max(by: { (max, next) -> Bool in
                     return max.1 < next.1
                 })?.0 else {
-            return constant(for: BottomSheetDefaultAnchor.max.offset)
+            return constant(for: BottomSheetDefaultAnchor.max.rawValue)
         }
         return constant(for: delegate.offsets[index])
     }

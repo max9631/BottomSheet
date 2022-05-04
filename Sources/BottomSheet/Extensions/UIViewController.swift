@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import InheritableEnum
 
 extension UIViewController {
     internal var asBottomSheetdelegate: BottomSheetDelegateBase? {

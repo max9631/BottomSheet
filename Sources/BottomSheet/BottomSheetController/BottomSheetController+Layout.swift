@@ -21,7 +21,7 @@ extension BottomSheetController {
     }
 }
 
-private extension BottomSheetController {
+extension BottomSheetController {
     func createContentViewLayout() {
         let contentView = contentFrameView
         contentView.translatesAutoresizingMaskIntoConstraints = false

@@ -15,7 +15,7 @@ class BottomSheetGestureRouter: NSObject {
         }
     }
     
-    lazy var slideGestureRecognizer: UIPanGestureRecognizer = { createGesture(selector: #selector(slide)) }()
+    lazy var slideGestureRecognizer: UIPanGestureRecognizer = createGesture(selector: #selector(slide))
     private weak var scrollViewGestureRecognizer: UIPanGestureRecognizer?
     
     private var slideGesture: BottomSheetSlideGesture = .init()

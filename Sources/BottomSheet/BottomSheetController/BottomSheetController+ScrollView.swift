@@ -10,5 +10,6 @@ import UIKit
 extension BottomSheetController {
     public func registerScrollViewDelegate(scrollView: UIScrollView) {
         gestureRouter.registerScrollViewDelegate(scrollView: scrollView)
+        scrollView.bounces = false
     }
 }

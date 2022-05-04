@@ -7,7 +7,7 @@
 
 import UIKit
 
-protocol BottomSheetSlideGestureDelegate: class {
+protocol BottomSheetSlideGestureDelegate: AnyObject {
     var delegate: BottomSheetDelegateBase? { get }
     var corrdinateSystem: UIView { get }
     var maxHeightConstant: CGFloat { get }
@@ -36,6 +36,7 @@ struct BottomSheetSlideGesture {
         case .ended:
             let velocity = -recognizer.velocity(in: delegate.corrdinateSystem).y // [points/second] - up, + down
             let decelerationRate = UIScrollView.DecelerationRate.fast.rawValue
+            // The next line is used from the WWDC video about Designing fluid interfaces
             let projectedDistance = (velocity / 1000) * decelerationRate / (1.0 - decelerationRate)
             let projection = initialHeight + dy + projectedDistance
             let nearestOffset = delegate.nearestOffset(for: projection)

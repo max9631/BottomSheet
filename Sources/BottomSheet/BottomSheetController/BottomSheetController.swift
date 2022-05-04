@@ -8,6 +8,7 @@ public protocol BottomSheetControllerDelegate {
 }
 
 open class BottomSheetController: UIViewController {
+
     // MARK: - Contained view controllers
     public var masterViewController: UIViewController?
     public var contextViewControllers: [UIViewController] = []

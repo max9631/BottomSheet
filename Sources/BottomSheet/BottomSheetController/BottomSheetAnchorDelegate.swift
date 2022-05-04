@@ -10,16 +10,28 @@
 //}
 
 import UIKit
+import InheritableEnum
 
-public struct BottomSheetHook<AnchorType: BottomSheetAnchor> {
+public class BottomSheetHook<AnchorType: BottomSheetAnchor> {
     private var controller: BottomSheetController
+    public var to: AnchorType.ChainType!
     
     public init(controller: BottomSheetController) {
         self.controller = controller
+        self.to = AnchorType.chain(with: self)
     }
     
     public func anchor(to anchor: AnchorType, animated: Bool = true) {
-        controller.setOffset(offset: anchor.offset, animated: animated)
+        controller.setOffset(offset: anchor.rawValue, animated: animated)
+    }
+}
+
+extension BottomSheetHook: ChainingDelegate {
+    public func recevied<Value>(new value: Value) {
+        guard let anchor = value as? AnchorType.RawValue else {
+            return
+        }
+        controller.setOffset(offset: anchor, animated: true)
     }
 }
 
@@ -32,7 +44,7 @@ public protocol BottomSheetAnchorDelegate: BottomSheetDelegateBase {
 }
 
 public extension BottomSheetAnchorDelegate {
-    var offsets: [BottomSheetOffset] { AnchorType.allCases.map(\.offset) }
+    var offsets: [BottomSheetOffset] { AnchorType.allInheritedCases }
 }
 
 public extension BottomSheetAnchorDelegate where Self: UIViewController {

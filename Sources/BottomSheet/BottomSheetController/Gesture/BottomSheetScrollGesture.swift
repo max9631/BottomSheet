@@ -50,7 +50,6 @@ class BottomSheetSrollGesture {
             fallthrough
         case .changed:
             let justStartedSliding = isInSlideState && !wasInSlideState
-//            let justEndedSliding = !isInSlideState && wasInSlideState
             if justStartedSliding {
                 initialHeight = delegate.position.currentHeight
                 activationLocation = recognizer.location(in: delegate.corrdinateSystem).y
@@ -67,6 +66,7 @@ class BottomSheetSrollGesture {
             if isInSlideState {
                 let velocity = -recognizer.velocity(in: delegate.corrdinateSystem).y // [points/second] - up, + down
                 let decelerationRate = UIScrollView.DecelerationRate.fast.rawValue
+                // The next line is used from the WWDC video about Designing fluid interfaces
                 let projectedDistance = (velocity / 1000) * decelerationRate / (1.0 - decelerationRate)
                 let projection = initialHeight + translation + projectedDistance
                 let nearestOffset = delegate.nearestOffset(for: projection)
