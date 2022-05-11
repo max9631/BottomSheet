@@ -54,7 +54,8 @@ extension BottomSheetController: BottomSheetSlideGestureDelegate {
     
     public func setOffset(offset: BottomSheetOffset, animated: Bool = true, velocity: CGFloat = 0, completion: ((Bool) -> Void)? = nil) {
         let closure = {
-            self.position.setHeight(constant: self.constant(for: offset))
+            let constant = self.constant(for: offset)
+            self.position.setHeight(constant: constant)
             self.view.layoutIfNeeded()
         }
         guard animated else {
@@ -66,15 +67,17 @@ extension BottomSheetController: BottomSheetSlideGestureDelegate {
         }
         var distance = constant(for: offset) - position.currentHeight
         distance = distance == 0 ? 1 : distance
-        UIView.animate(
-            withDuration: 0.7,
-            delay: 0,
-            usingSpringWithDamping: velocity == 0 ? 1 : 0.7,
-            initialSpringVelocity: velocity / distance,
-            options: .allowUserInteraction,
-            animations: closure,
-            completion: completion
-        )
+        DispatchQueue.main.async {
+            UIView.animate(
+                withDuration: 0.7,
+                delay: 0,
+                usingSpringWithDamping: velocity == 0 ? 1 : 0.7,
+                initialSpringVelocity: velocity / distance,
+                options: .allowUserInteraction,
+                animations: closure,
+                completion: completion
+            )
+        }
     }
     
     func nearestOffset(for projection: CGFloat) -> BottomSheetOffset {
