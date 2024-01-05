@@ -31,6 +31,10 @@ open class BottomSheetController: UIViewController {
     var gestureRouter: BottomSheetGestureRouter = .init()
     
     // MARK: - Initializers
+    public init() {
+        super.init(nibName: nil, bundle: nil)
+    }
+
     public init(masterViewController: UIViewController, overlayViewController: UIViewController) {
         super.init(nibName: nil, bundle: nil)
         showMaster(with: masterViewController)
