@@ -47,21 +47,28 @@ public extension BottomSheetController {
         }
     }
     
-    func pushContext(viewController: UIViewController, at offset: BottomSheetOffset? = nil, animated: Bool) {
+    func pushContext(viewController: UIViewController, forceHeightBasedOnMaxAnchor: Bool = false, at offset: BottomSheetOffset? = nil, animated: Bool, completion: (() -> Void)? = nil) {
         self.contextViewControllers.append(viewController)
         self.addChild(viewController)
         setOffset(offset: .specific(offset: 0), animated: animated) { _ in
             self.bottomSheet.embedIn(view: viewController.view, bottomPriority: .defaultLow - 10, maxHeight: self.contentFrameView.heightAnchor)
+            if forceHeightBasedOnMaxAnchor {
+                viewController.view.heightAnchor.constraint(equalToConstant: self.maxHeightConstantUnlimited).isActive = true
+            }
             self.bottomSheet.layoutIfNeeded()
             if let offset = offset {
-                self.setOffset(offset: offset, animated: animated)
+                self.setOffset(offset: offset, animated: animated) { _ in
+                    completion?()
+                }
+            } else {
+                completion?()
             }
         }
         viewController.didMove(toParent: self)
         setOverrideTraitCollection(UITraitCollection(horizontalSizeClass: .compact), forChild: viewController)
     }
     
-    func popContext() {
+    func popContext(completion: (() -> Void)? = nil) {
         guard !contextViewControllers.isEmpty else { return }
         let controller = contextViewControllers.popLast()
         setOffset(offset: .specific(offset: 0)) { _ in
@@ -71,6 +78,7 @@ public extension BottomSheetController {
             if let previousController = self.contextViewControllers.last {
                 self.bottomSheet.embedIn(view: previousController.view, bottomPriority: .defaultLow - 10, maxHeight: self.contentFrameView.heightAnchor)
             }
+            completion?()
         }
     }
 }

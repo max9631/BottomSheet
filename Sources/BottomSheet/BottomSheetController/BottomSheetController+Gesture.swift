@@ -23,21 +23,20 @@ extension BottomSheetController: BottomSheetSlideGestureDelegate {
     
     
     var maxHeightConstant: CGFloat {
-        guard let delegate = delegate,
-              let index = delegate.offsets
-                .enumerated()
-                .map({ (index, offset) in
-                    return (index, constant(for: offset))
-                })
-                .max(by: { (max, next) -> Bool in
-                    return max.1 < next.1
-                })?.0 else {
-            return constant(for: BottomSheetDefaultAnchor.max.rawValue)
-        }
-        return constant(for: delegate.offsets[index])
+        delegate?.offsets
+            .map({ constant(for: $0) })
+            .max(by: {  $0 < $1 })
+            ?? constant(for: BottomSheetDefaultAnchor.max.rawValue)
     }
-    
-    internal func constant(for offset: BottomSheetOffset) -> CGFloat {
+
+    var maxHeightConstantUnlimited: CGFloat {
+        delegate?.offsets
+            .map({ constant(for: $0, constrainedByPresentingView: false) })
+            .max(by: {  $0 < $1 })
+            ?? constant(for: BottomSheetDefaultAnchor.max.rawValue)
+    }
+
+    internal func constant(for offset: BottomSheetOffset, constrainedByPresentingView: Bool = true) -> CGFloat {
         let constant: CGFloat = {
             switch offset {
             case let .specific(offset):
@@ -46,7 +45,9 @@ extension BottomSheetController: BottomSheetSlideGestureDelegate {
                 return (maxContentHeight * percentage.clamp(from: 0, to: 1)) + offsettedBy
             }
         }()
-        if let maxHeight = bottomSheet.presentingView?.frame.height, constant > maxHeight {
+        if constrainedByPresentingView,
+            let maxHeight = bottomSheet.presentingView?.frame.height,
+            constant > maxHeight {
             return maxHeight
         }
         return constant
@@ -83,7 +84,7 @@ extension BottomSheetController: BottomSheetSlideGestureDelegate {
     func nearestOffset(for projection: CGFloat) -> BottomSheetOffset {
         let offsets = self.offsets
         let index = offsets
-            .map(constant(for:))
+            .map { constant(for: $0) }
             .enumerated()
             .map { index, offset in (index, abs(offset - projection)) }
             .min { $0.1 < $1.1 }?.0
