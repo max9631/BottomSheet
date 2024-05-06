@@ -68,13 +68,19 @@ public extension BottomSheetController {
         setOverrideTraitCollection(UITraitCollection(horizontalSizeClass: .compact), forChild: viewController)
     }
     
-    func popContext(completion: (() -> Void)? = nil) {
+    func popContext(count: Int = 1, completion: (() -> Void)? = nil) {
         guard !contextViewControllers.isEmpty else { return }
-        let controller = contextViewControllers.popLast()
+        var popedVC: [UIViewController?] = []
+        for _ in 0..<count {
+            let controller = contextViewControllers.popLast()
+            popedVC.append(controller)
+        }
         setOffset(offset: .specific(offset: 0)) { _ in
-            controller?.willMove(toParent: nil)
-            controller?.view.removeFromSuperview()
-            controller?.removeFromParent()
+            popedVC.forEach { controller in
+                controller?.willMove(toParent: nil)
+                controller?.view.removeFromSuperview()
+                controller?.removeFromParent()
+            }
             if let previousController = self.contextViewControllers.last {
                 self.bottomSheet.embedIn(view: previousController.view, bottomPriority: .defaultLow - 10, maxHeight: self.contentFrameView.heightAnchor)
             }
