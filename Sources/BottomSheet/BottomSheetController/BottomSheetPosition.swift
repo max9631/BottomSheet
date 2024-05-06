@@ -135,10 +135,12 @@ public class BottomSheetPosition {
     
     func updateSafeAreaInsets(constant: CGFloat? = nil) {
         masterViewController?.additionalSafeAreaInsets = { () -> UIEdgeInsets in
+            var insets = self.masterViewController?.additionalSafeAreaInsets ?? .zero
             if isRegularSizeClass {
                 switch self.bottomSheetRegularSizeClassPrezentation {
-                case .left: return .init(top: 0, left: 320 + 16 + 16, bottom: 0, right: 0)
-                case .right: return .init(top: 0, left: 0, bottom: 320 + 16 + 16, right: 0)
+                case .left:
+                    return .init(top: insets.top, left: 320 + 16 + 16, bottom: 0, right: 0)
+                case .right: return .init(top: insets.top, left: 0, bottom: 320 + 16 + 16, right: 0)
                 case .bottom: return .zero
                 }
             } else {
@@ -146,9 +148,11 @@ public class BottomSheetPosition {
                    let master = self.masterViewController {
                     let constant = constant ?? self.bottomOffsetConstraint.constant
                     let bottom = constant.clamp(from: 0, to: master.view.frame.height/2) - (controller?.view.safeAreaInsets.bottom ?? 0)
-                    return.init(top: 0, left: 0, bottom: bottom, right: 0)
+                    return .init(top: insets.top, left: 0, bottom: bottom, right: 0)
                 } else {
-                    return .zero
+                    var noneInsets = UIEdgeInsets.zero
+                    noneInsets.top = insets.top
+                    return noneInsets
                 }
             }
         }()
